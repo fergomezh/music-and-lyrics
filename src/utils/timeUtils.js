@@ -2,7 +2,7 @@
  * Formats a duration in seconds to "m:ss" string.
  */
 export function formatTime(seconds) {
-  if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '0:00'
+  if (!seconds || seconds < 0 || isNaN(seconds) || !isFinite(seconds)) return '0:00'
   const s = Math.floor(seconds)
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
@@ -12,6 +12,7 @@ export function formatTime(seconds) {
  * Tries "Artist - Track" split first, then falls back to channelTitle as artist.
  */
 export function parseYouTubeTitle(title, channelTitle = '') {
+  if (!title) return { artist: channelTitle, track: '' }
   const dashMatch = title.match(/^(.+?)\s*[-–—]\s*(.+)$/)
   if (dashMatch) {
     const artist = dashMatch[1].trim()
