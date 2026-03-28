@@ -551,7 +551,6 @@ img { display: block; max-width: 100%; }
     text-shadow var(--transition-lyric);
   background: none;
   border: none;
-  font-family: 'DM Mono', monospace;
 }
 .lyric-line:hover { opacity: 0.8; }
 .lyric-line--past {
