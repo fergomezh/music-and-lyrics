@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Disc3 } from 'lucide-react'
 import { SearchBar } from '../Library/SearchBar.jsx'
 import { TrackList } from '../Library/TrackList.jsx'
@@ -11,11 +11,50 @@ import { MigrationBanner } from '../Auth/MigrationBanner.jsx'
 import { usePlayer } from '../../context/PlayerContext.jsx'
 
 const DISMISSED_KEY = 'ml_migration_dismissed'
+const SIDEBAR_WIDTH_KEY = 'ml_sidebar_width'
+const MIN_WIDTH = 220
+const MAX_WIDTH = 520
 
 export function Sidebar() {
   const { sidebarTab, setSidebarTab, migrateLocalToCloud, migratePlaylistsToCloud } = usePlayer()
   const [authOpen, setAuthOpen] = useState(false)
   const [migrationCount, setMigrationCount] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const widthRef = useRef(
+    Math.max(MIN_WIDTH, Math.min(MAX_WIDTH,
+      parseInt(localStorage.getItem(SIDEBAR_WIDTH_KEY) || '300', 10)
+    ))
+  )
+
+  // Apply saved width on mount
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', widthRef.current + 'px')
+  }, [])
+
+  const handleResizeMouseDown = useCallback((e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = widthRef.current
+    setIsDragging(true)
+
+    const onMouseMove = (e) => {
+      const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth + (e.clientX - startX)))
+      widthRef.current = newWidth
+      document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px')
+    }
+
+    const onMouseUp = () => {
+      setIsDragging(false)
+      document.body.style.userSelect = ''
+      localStorage.setItem(SIDEBAR_WIDTH_KEY, String(widthRef.current))
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.body.style.userSelect = 'none'
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
 
   const handleSignedIn = () => {
     if (sessionStorage.getItem(DISMISSED_KEY)) return
@@ -35,6 +74,10 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
+      <div
+        className={`sidebar__resize-handle${isDragging ? ' sidebar__resize-handle--dragging' : ''}`}
+        onMouseDown={handleResizeMouseDown}
+      />
       <div className="sidebar__logo">
         <Disc3 size={20} />
         <span>Music &amp; Lyrics</span>

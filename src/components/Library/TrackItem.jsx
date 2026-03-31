@@ -51,7 +51,7 @@ export function TrackItem({ track, playlistId, showRemoveFromPlaylist }) {
       </div>
 
       {/* Title + channel */}
-      <div className="track-item__info" data-tooltip={track.title}>
+      <div className="track-item__info">
         <div className="track-item__title">{track.title}</div>
         <div className="track-item__channel">{track.channelTitle}</div>
       </div>
