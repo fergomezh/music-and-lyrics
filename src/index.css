@@ -892,32 +892,6 @@ body::before {
   color: var(--accent);
   border-color: var(--border-accent);
 }
-.speed-pills { 
-  display: flex; 
-  gap: 6px; 
-  margin-left: 12px; 
-}
-.speed-pill {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  color: var(--text-dim);
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  transition: all var(--transition);
-}
-.speed-pill:hover { 
-  color: var(--text-secondary); 
-  border-color: var(--border-accent);
-  background: var(--accent-glow);
-}
-.speed-pill--active {
-  color: var(--accent);
-  background: var(--accent-glow);
-  border-color: var(--accent);
-}
 
 /* ===== LYRICS PANEL ===== */
 .lyrics-panel {
@@ -1467,10 +1441,6 @@ body::before {
   }
   .volume-control__slider {
     display: none;
-  }
-  .speed-pills {
-    margin-left: 0;
-    margin-top: 8px;
   }
 }
 
