@@ -536,11 +536,11 @@ body::before {
   transform: translateX(-50%) scale(1);
 }
 
-/* Title tooltip — appears above the info area, left-aligned */
+/* Title tooltip — appears below the title, left-aligned */
 .track-item__info[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 4px);
+  top: calc(100% + 2px);
   left: 0;
   background: rgba(10, 10, 10, 0.92);
   color: var(--text-primary);
@@ -556,7 +556,7 @@ body::before {
   pointer-events: none;
   opacity: 0;
   transform: scale(0.95);
-  transform-origin: bottom left;
+  transform-origin: top left;
   transition: opacity 0.12s, transform 0.12s;
   z-index: 50;
 }
