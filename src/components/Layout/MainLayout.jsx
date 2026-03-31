@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Music, Heart, Play, Pause, ListMusic, ChevronUp, ChevronDown, Maximize2, Minimize2, User, LogOut } from 'lucide-react'
+import { Search, Music, Heart, Play, Pause, ListMusic, ChevronUp, ChevronDown, Maximize2, Minimize2, User, LogOut, Mic2 } from 'lucide-react'
 import { Sidebar } from './Sidebar.jsx'
 import { TrackInfo } from '../Player/TrackInfo.jsx'
 import { PlayerControls } from '../Player/PlayerControls.jsx'
@@ -35,7 +35,7 @@ export function MainLayout() {
   const [authOpen, setAuthOpen] = useState(false)
   const [migrationCount, setMigrationCount] = useState(0)
 
-  const { currentTrack, isPlaying, play, pause, lyricsMaximized, currentTime, duration, activePlaylistId, migrateLocalToCloud, migratePlaylistsToCloud } = usePlayer()
+  const { currentTrack, isPlaying, play, pause, lyricsMaximized, currentTime, duration, activePlaylistId, migrateLocalToCloud, migratePlaylistsToCloud, lyricsLoading, lyricsError, lyrics } = usePlayer()
   const { user, signOut } = useAuth()
 
   const handleSignedIn = () => {
@@ -49,6 +49,31 @@ export function MainLayout() {
   const handleMigrate = async () => {
     await Promise.all([migrateLocalToCloud(), migratePlaylistsToCloud()])
     setMigrationCount(0)
+  }
+
+  const renderMobileLyrics = () => {
+    if (lyricsLoading) {
+      return (
+        <div className="lyrics-placeholder">
+          {[80, 60, 90, 50, 75, 55, 85].map((w, i) => (
+            <div key={i} className="lyrics-placeholder__line" style={{ width: `${w}%`, animationDelay: `${i * 0.15}s` }} />
+          ))}
+        </div>
+      )
+    }
+    if (lyricsError === 'not_found' || (!lyrics.lines.length && !lyrics.plainLyrics)) {
+      const geniusQuery = encodeURIComponent(`${currentTrack?.title ?? ''} ${currentTrack?.channelTitle ?? ''}`)
+      return (
+        <div className="lyrics-empty">
+          <Mic2 size={36} strokeWidth={1} />
+          <span>Lyrics not available</span>
+          <a className="lyrics-empty__link" href={`https://genius.com/search?q=${geniusQuery}`} target="_blank" rel="noopener noreferrer">
+            Search on Genius →
+          </a>
+        </div>
+      )
+    }
+    return <LyricsDisplay />
   }
 
   return (
@@ -138,7 +163,7 @@ export function MainLayout() {
               </button>
             </div>
             <div className="mobile-lyrics-fullscreen__scroll">
-              <LyricsDisplay />
+              {renderMobileLyrics()}
             </div>
           </div>
         ) : (
@@ -168,7 +193,7 @@ export function MainLayout() {
               </div>
               {mobileLyricsOpen && (
                 <div className="mobile-lyrics__scroll">
-                  <LyricsDisplay />
+                  {renderMobileLyrics()}
                 </div>
               )}
             </div>
