@@ -1886,7 +1886,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 10px;
+  padding: 8px 20px 10px;
   flex-shrink: 0;
 }
 
