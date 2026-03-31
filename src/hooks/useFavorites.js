@@ -1,4 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../context/AuthContext.jsx'
+import {
+  fetchCloudFavorites,
+  insertCloudFavorite,
+  deleteCloudFavorite,
+  batchInsertCloudFavorites,
+} from './useFavoritesCloud.js'
 
 const STORAGE_KEY = 'ml_favorites'
 
@@ -11,7 +18,31 @@ function save(list) {
 }
 
 export function useFavorites() {
+  const { user } = useAuth()
   const [favorites, setFavorites] = useState(load)
+  const [favoritesLoading, setFavoritesLoading] = useState(false)
+
+  // ── Sync: load from cloud when user signs in, localStorage when signed out ──
+  useEffect(() => {
+    if (!user) {
+      setFavorites(load())
+      return
+    }
+
+    setFavoritesLoading(true)
+    fetchCloudFavorites(user.id)
+      .then(list => {
+        setFavorites(list)
+        save(list) // keep localStorage in sync for offline use
+      })
+      .catch(() => {
+        // Network failure: fall back to whatever is in localStorage
+        setFavorites(load())
+      })
+      .finally(() => setFavoritesLoading(false))
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Mutations: optimistic local-first, cloud fire-and-forget ─────────────────
 
   const addFavorite = useCallback((track) => {
     setFavorites(prev => {
@@ -20,7 +51,11 @@ export function useFavorites() {
       save(next)
       return next
     })
-  }, [])
+    if (user) {
+      insertCloudFavorite(user.id, { ...track, savedAt: new Date().toISOString() })
+        .catch(() => { /* silently swallow — local state is already updated */ })
+    }
+  }, [user])
 
   const removeFavorite = useCallback((videoId) => {
     setFavorites(prev => {
@@ -28,7 +63,11 @@ export function useFavorites() {
       save(next)
       return next
     })
-  }, [])
+    if (user) {
+      deleteCloudFavorite(user.id, videoId)
+        .catch(() => { /* silently swallow */ })
+    }
+  }, [user])
 
   const toggleFavorite = useCallback((track) => {
     setFavorites(prev => {
@@ -37,9 +76,16 @@ export function useFavorites() {
         ? prev.filter(f => f.videoId !== track.videoId)
         : [{ ...track, savedAt: new Date().toISOString() }, ...prev]
       save(next)
+      if (user) {
+        if (exists) {
+          deleteCloudFavorite(user.id, track.videoId).catch(() => {})
+        } else {
+          insertCloudFavorite(user.id, { ...track, savedAt: new Date().toISOString() }).catch(() => {})
+        }
+      }
       return next
     })
-  }, [])
+  }, [user])
 
   const isFavorite = useCallback(
     (videoId) => favorites.some(f => f.videoId === videoId),
@@ -56,5 +102,27 @@ export function useFavorites() {
     URL.revokeObjectURL(url)
   }, [favorites])
 
-  return { favorites, addFavorite, removeFavorite, toggleFavorite, isFavorite, exportFavorites }
+  // ── Migration: push localStorage favorites up to the cloud ───────────────────
+
+  const migrateLocalToCloud = useCallback(async () => {
+    if (!user) return
+    const local = load()
+    if (!local.length) return
+    await batchInsertCloudFavorites(user.id, local)
+    // Re-fetch to get the authoritative cloud list
+    const list = await fetchCloudFavorites(user.id)
+    setFavorites(list)
+    save(list)
+  }, [user])
+
+  return {
+    favorites,
+    favoritesLoading,
+    addFavorite,
+    removeFavorite,
+    toggleFavorite,
+    isFavorite,
+    exportFavorites,
+    migrateLocalToCloud,
+  }
 }

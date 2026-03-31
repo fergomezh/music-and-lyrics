@@ -2,6 +2,12 @@ const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY
 const BASE_URL = 'https://www.googleapis.com/youtube/v3'
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
+/** Decode HTML entities returned by the YouTube API (e.g. &amp; → &, &quot; → ") */
+function decodeHtml(str) {
+  const doc = new DOMParser().parseFromString(str, 'text/html')
+  return doc.body.textContent ?? str
+}
+
 function getCached(query) {
   try {
     const raw = sessionStorage.getItem(`yt_search_${query}`)
@@ -50,8 +56,8 @@ export async function searchSongs(query) {
   const data = await res.json()
   const results = (data.items || []).map(item => ({
     videoId: item.id.videoId,
-    title: item.snippet.title,
-    channelTitle: item.snippet.channelTitle,
+    title: decodeHtml(item.snippet.title),
+    channelTitle: decodeHtml(item.snippet.channelTitle),
     thumbnailUrl:
       item.snippet.thumbnails.high?.url ||
       item.snippet.thumbnails.medium?.url ||

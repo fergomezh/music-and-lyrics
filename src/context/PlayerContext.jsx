@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useYouTubePlayer } from '../hooks/useYouTubePlayer.js'
 import { useFavorites } from '../hooks/useFavorites.js'
+import { usePlaylists } from '../hooks/usePlaylists.js'
 import { useLyricsSync } from '../hooks/useLyricsSync.js'
 import { getLyrics } from '../services/lyricsApi.js'
 import { searchSongs } from '../services/youtubeApi.js'
@@ -37,6 +38,11 @@ export function PlayerProvider({ children }) {
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [sidebarTab, setSidebarTab] = useState('search')
+  const [lyricsMaximized, setLyricsMaximized] = useState(false)
+
+  const toggleLyricsMaximized = useCallback(() => {
+    setLyricsMaximized(prev => !prev)
+  }, [])
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const currentTrack = queue[currentIndex] ?? null
@@ -62,6 +68,12 @@ export function PlayerProvider({ children }) {
 
   // ── Favorites ──────────────────────────────────────────────────────────────
   const favs = useFavorites()
+
+  // ── Playlists ──────────────────────────────────────────────────────────────
+  const plists = usePlaylists()
+  const [activePlaylistId, setActivePlaylistId]   = useState(null)
+  const [pendingPlaylistTrack, setPendingPlaylistTrack] = useState(null)
+  const [createPlaylistOpen, setCreatePlaylistOpen]     = useState(false)
 
   // ── Lyrics sync ────────────────────────────────────────────────────────────
   const { activeIndex: activeLyricIndex } = useLyricsSync(lyrics.lines, yt.currentTime)
@@ -206,6 +218,18 @@ export function PlayerProvider({ children }) {
     })
   }, [favs, lyrics])
 
+  // ── Playlist actions ──────────────────────────────────────────────────────
+  const playPlaylist = useCallback((playlistId) => {
+    const tracks = plists.getPlaylistTracks(playlistId)
+    if (!tracks.length) return
+    setQueue(tracks)
+    setCurrentIndex(0)
+  }, [plists])
+
+  const openAddToPlaylist = useCallback((track) => {
+    setPendingPlaylistTrack(track)
+  }, [])
+
   const value = {
     // Track / queue
     currentTrack,
@@ -248,9 +272,27 @@ export function PlayerProvider({ children }) {
     // UI
     sidebarTab,
     setSidebarTab,
+    lyricsMaximized,
+    toggleLyricsMaximized,
     // Favorites (spread useFavorites + enhanced toggle)
     ...favs,
     toggleFavoriteWithLyrics,
+    // Playlists
+    playlists:              plists.playlists,
+    playlistsLoading:       plists.playlistsLoading,
+    getPlaylistTracks:      plists.getPlaylistTracks,
+    createPlaylist:         plists.createPlaylist,
+    renamePlaylist:         plists.renamePlaylist,
+    deletePlaylist:         plists.deletePlaylist,
+    addTrackToPlaylist:     plists.addTrackToPlaylist,
+    removeTrackFromPlaylist: plists.removeTrackFromPlaylist,
+    isTrackInPlaylist:      plists.isTrackInPlaylist,
+    migratePlaylistsToCloud: plists.migratePlaylistsToCloud,
+    activePlaylistId, setActivePlaylistId,
+    pendingPlaylistTrack, setPendingPlaylistTrack,
+    createPlaylistOpen, setCreatePlaylistOpen,
+    playPlaylist,
+    openAddToPlaylist,
     // YouTube container ref (consumed by VideoPlayer component)
     ytContainerRef: yt.containerRef,
   }
