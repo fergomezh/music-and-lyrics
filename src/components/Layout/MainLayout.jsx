@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Music, Heart, Play, Pause, ListMusic, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react'
+import { Search, Music, Heart, Play, Pause, ListMusic, ChevronUp, ChevronDown, Maximize2, Minimize2, User, LogOut } from 'lucide-react'
 import { Sidebar } from './Sidebar.jsx'
 import { TrackInfo } from '../Player/TrackInfo.jsx'
 import { PlayerControls } from '../Player/PlayerControls.jsx'
@@ -12,13 +12,44 @@ import { LyricsDisplay } from '../Lyrics/LyricsDisplay.jsx'
 import { PlaylistList } from '../Library/PlaylistList.jsx'
 import { PlaylistDetail } from '../Library/PlaylistDetail.jsx'
 import { AddToPlaylistModal } from '../Library/AddToPlaylistModal.jsx'
+import { AuthModal } from '../Auth/AuthModal.jsx'
+import { MigrationBanner } from '../Auth/MigrationBanner.jsx'
 import { usePlayer } from '../../context/PlayerContext.jsx'
+import { useAuth } from '../../context/AuthContext.jsx'
+
+const DISMISSED_KEY = 'ml_migration_dismissed'
+
+function initials(email) {
+  if (!email) return '?'
+  const [local] = email.split('@')
+  const parts = local.split(/[._-]/)
+  return parts.length >= 2
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : local.slice(0, 2).toUpperCase()
+}
 
 export function MainLayout() {
   const [mobileTab, setMobileTab] = useState('search')
   const [mobileLyricsOpen, setMobileLyricsOpen] = useState(false)
   const [mobileLyricsFullscreen, setMobileLyricsFullscreen] = useState(false)
-  const { currentTrack, isPlaying, play, pause, lyricsMaximized, currentTime, duration, activePlaylistId } = usePlayer()
+  const [authOpen, setAuthOpen] = useState(false)
+  const [migrationCount, setMigrationCount] = useState(0)
+
+  const { currentTrack, isPlaying, play, pause, lyricsMaximized, currentTime, duration, activePlaylistId, migrateLocalToCloud, migratePlaylistsToCloud } = usePlayer()
+  const { user, signOut } = useAuth()
+
+  const handleSignedIn = () => {
+    if (sessionStorage.getItem(DISMISSED_KEY)) return
+    try {
+      const localFavs = JSON.parse(localStorage.getItem('ml_favorites') || '[]')
+      if (localFavs.length > 0) setMigrationCount(localFavs.length)
+    } catch { /* ignore */ }
+  }
+
+  const handleMigrate = async () => {
+    await Promise.all([migrateLocalToCloud(), migratePlaylistsToCloud()])
+    setMigrationCount(0)
+  }
 
   return (
     <>
@@ -43,6 +74,13 @@ export function MainLayout() {
 
       {/* ── Mobile Tab Bar ── */}
       <nav className="mobile-tabs">
+        {migrationCount > 0 && (
+          <MigrationBanner
+            count={migrationCount}
+            onMigrate={handleMigrate}
+            onDismiss={() => setMigrationCount(0)}
+          />
+        )}
         <div className="mobile-tabs__bar">
           {[
             { id: 'search', icon: Search, label: 'Search' },
@@ -59,6 +97,19 @@ export function MainLayout() {
               <span>{label}</span>
             </button>
           ))}
+          {user ? (
+            <div className="mobile-user">
+              <div className="mobile-user__avatar" onClick={() => signOut()} title="Sign out">
+                {initials(user.email)}
+                <span className="mobile-user__signout"><LogOut size={12} /></span>
+              </div>
+            </div>
+          ) : (
+            <button className="mobile-user mobile-user--signin" onClick={() => setAuthOpen(true)}>
+              <User size={16} />
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -137,6 +188,12 @@ export function MainLayout() {
 
       {/* ── Global Modals ── */}
       <AddToPlaylistModal />
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          onSignedIn={handleSignedIn}
+        />
+      )}
 
       {/* ── Mobile Bottom Mini-Player ── */}
       <div className="mobile-player">

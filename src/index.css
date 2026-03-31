@@ -1322,10 +1322,58 @@ body::before {
   border-bottom: 2px solid transparent;
   transition: all var(--transition);
 }
-.mobile-tab--active { 
-  color: var(--accent); 
+.mobile-tab--active {
+  color: var(--accent);
   border-bottom-color: var(--accent);
 }
+.mobile-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+}
+.mobile-user--signin {
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color var(--transition);
+}
+.mobile-user--signin:hover { color: var(--accent); }
+.mobile-user__avatar {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid var(--border-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.mobile-user__signout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.75);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.mobile-user__avatar:hover .mobile-user__signout { opacity: 1; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
