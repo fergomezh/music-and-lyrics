@@ -109,6 +109,7 @@ export function PlayerProvider({ children }) {
     }
 
     // 2. Fetch from lrclib
+    let cancelled = false
     setLyricsLoading(true)
     setLyricsError(null)
     setLyrics({ syncedLyrics: null, plainLyrics: null, lines: [] })
@@ -117,6 +118,7 @@ export function PlayerProvider({ children }) {
 
     getLyrics({ trackName: track, artistName: artist, duration: currentTrack.duration })
       .then(data => {
+        if (cancelled) return
         if (data) {
           const lines = data.syncedLyrics ? parseLRC(data.syncedLyrics) : []
           setLyrics({ ...data, lines })
@@ -124,8 +126,10 @@ export function PlayerProvider({ children }) {
           setLyricsError('not_found')
         }
       })
-      .catch(() => setLyricsError('error'))
-      .finally(() => setLyricsLoading(false))
+      .catch(() => { if (!cancelled) setLyricsError('error') })
+      .finally(() => { if (!cancelled) setLyricsLoading(false) })
+
+    return () => { cancelled = true }
   }, [currentTrack?.videoId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Queue actions ──────────────────────────────────────────────────────────

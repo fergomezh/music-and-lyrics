@@ -54,10 +54,16 @@ export function usePlaylists() {
       ),
     ])
       .then(([pls, trks]) => {
-        setPlaylists(pls)
-        setTracks(trks)
-        savePlaylists(pls)
-        saveTracks(trks)
+        if (pls.length > 0) {
+          setPlaylists(pls)
+          setTracks(trks)
+          savePlaylists(pls)
+          saveTracks(trks)
+        } else {
+          // Cloud is empty — keep local data intact so migration can run
+          setPlaylists(loadPlaylists())
+          setTracks(loadTracks())
+        }
       })
       .catch(() => {
         setPlaylists(loadPlaylists())

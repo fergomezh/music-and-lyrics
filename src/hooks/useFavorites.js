@@ -32,8 +32,13 @@ export function useFavorites() {
     setFavoritesLoading(true)
     fetchCloudFavorites(user.id)
       .then(list => {
-        setFavorites(list)
-        save(list) // keep localStorage in sync for offline use
+        if (list.length > 0) {
+          setFavorites(list)
+          save(list) // keep localStorage in sync for offline use
+        } else {
+          // Cloud is empty — keep local favorites intact so migration can run
+          setFavorites(load())
+        }
       })
       .catch(() => {
         // Network failure: fall back to whatever is in localStorage
