@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useFavorites } from '../useFavorites.js'
 
+vi.mock('../../context/AuthContext.jsx', () => ({
+  useAuth: () => ({ user: null }),
+}))
+
 beforeEach(() => {
   localStorage.clear()
   vi.restoreAllMocks()
