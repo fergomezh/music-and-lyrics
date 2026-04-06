@@ -28,6 +28,7 @@ export function Favorites() {
             className="favorites__export"
             onClick={() => playTracks(shown)}
             title="Play all"
+            aria-label="Play all"
           >
             <Play size={13} fill="currentColor" />
           </button>
@@ -37,6 +38,7 @@ export function Favorites() {
             className="favorites__export"
             onClick={exportFavorites}
             title="Export as JSON"
+            aria-label="Export as JSON"
           >
             <Download size={13} />
           </button>
