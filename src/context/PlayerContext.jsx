@@ -223,12 +223,15 @@ export function PlayerProvider({ children }) {
   }, [favs, lyrics])
 
   // ── Playlist actions ──────────────────────────────────────────────────────
-  const playPlaylist = useCallback((playlistId) => {
-    const tracks = plists.getPlaylistTracks(playlistId)
+  const playTracks = useCallback((tracks) => {
     if (!tracks.length) return
     setQueue(tracks)
     setCurrentIndex(0)
-  }, [plists])
+  }, [])
+
+  const playPlaylist = useCallback((playlistId) => {
+    playTracks(plists.getPlaylistTracks(playlistId))
+  }, [plists, playTracks])
 
   const openAddToPlaylist = useCallback((track) => {
     setPendingPlaylistTrack(track)
@@ -296,6 +299,7 @@ export function PlayerProvider({ children }) {
     pendingPlaylistTrack, setPendingPlaylistTrack,
     createPlaylistOpen, setCreatePlaylistOpen,
     playPlaylist,
+    playTracks,
     openAddToPlaylist,
     // YouTube container ref (consumed by VideoPlayer component)
     ytContainerRef: yt.containerRef,
