@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Play } from 'lucide-react'
 import { usePlayer } from '../../context/PlayerContext.jsx'
 import { TrackItem } from './TrackItem.jsx'
 
 export function Favorites() {
-  const { favorites, exportFavorites } = usePlayer()
+  const { favorites, exportFavorites, playTracks } = usePlayer()
   const [filter, setFilter] = useState('')
 
   const shown = filter.trim()
@@ -23,6 +23,15 @@ export function Favorites() {
           value={filter}
           onChange={e => setFilter(e.target.value)}
         />
+        {shown.length > 0 && (
+          <button
+            className="favorites__export"
+            onClick={() => playTracks(shown)}
+            title="Play all"
+          >
+            <Play size={13} fill="currentColor" />
+          </button>
+        )}
         {favorites.length > 0 && (
           <button
             className="favorites__export"
