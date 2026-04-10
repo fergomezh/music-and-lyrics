@@ -2,7 +2,7 @@ import { Heart, Music } from 'lucide-react'
 import { usePlayer } from '../../context/PlayerContext.jsx'
 
 export function TrackInfo() {
-  const { currentTrack, isPlaying, isFavorite, toggleFavoriteWithLyrics } = usePlayer()
+  const { currentTrack, isPlaying, isFavorite, toggleFavoriteWithLyrics, playError } = usePlayer()
 
   if (!currentTrack) {
     return (
@@ -35,6 +35,7 @@ export function TrackInfo() {
       <div className="track-info__meta">
         <div className="track-info__title">{currentTrack.title}</div>
         <div className="track-info__artist">{currentTrack.channelTitle}</div>
+        {playError && <div className="track-info__error">{playError}</div>}
         <div className="track-info__actions">
           <button
             className={`btn-heart${isFav ? ' btn-heart--active' : ''}`}

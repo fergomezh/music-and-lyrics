@@ -654,6 +654,12 @@ body::before {
   margin-bottom: 16px;
   letter-spacing: 0.5px;
 }
+.track-info__error {
+  font-size: 13px;
+  color: #e05252;
+  margin-top: -12px;
+  margin-bottom: 8px;
+}
 .track-info__actions { 
   display: flex; 
   gap: 12px; 

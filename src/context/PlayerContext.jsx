@@ -44,6 +44,10 @@ export function PlayerProvider({ children }) {
     setLyricsMaximized(prev => !prev)
   }, [])
 
+  // ── Playback error ─────────────────────────────────────────────────────────
+  const [playError, setPlayError] = useState(null)
+  const canAdvanceRef = useRef(false)
+
   // ── Derived ────────────────────────────────────────────────────────────────
   const currentTrack = queue[currentIndex] ?? null
   const nextTrackRef = useRef(null)
@@ -54,8 +58,12 @@ export function PlayerProvider({ children }) {
     onError: (code) => {
       // Codes 100/101/150 = unavailable. Code 5 = HTML5 error.
       if ([100, 101, 150].includes(code)) {
-        // Auto-advance after 1s
-        setTimeout(() => nextTrackRef.current?.(), 1000)
+        if (canAdvanceRef.current) {
+          // Auto-advance after 1s
+          setTimeout(() => nextTrackRef.current?.(), 1000)
+        } else {
+          setPlayError('This video cannot be played.')
+        }
       } else if (code === 5) {
         // Retry once, then advance
         setTimeout(() => {
@@ -89,9 +97,15 @@ export function PlayerProvider({ children }) {
     localStorage.setItem('ml_volume', String(volume))
   }, [volume])
 
+  // ── Keep canAdvanceRef fresh ───────────────────────────────────────────────
+  useEffect(() => {
+    canAdvanceRef.current = currentIndex < queue.length - 1 || repeatMode === 'all'
+  }, [currentIndex, queue.length, repeatMode])
+
   // ── Load video when track changes ──────────────────────────────────────────
   useEffect(() => {
     if (!currentTrack || !yt.playerReady) return
+    setPlayError(null)
     yt.loadVideo(currentTrack.videoId)
   }, [currentTrack?.videoId, yt.playerReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -266,6 +280,8 @@ export function PlayerProvider({ children }) {
     prevTrack,
     cycleRepeatMode,
     toggleShuffle,
+    // Playback error
+    playError,
     // Lyrics
     lyrics,
     lyricsLoading,
